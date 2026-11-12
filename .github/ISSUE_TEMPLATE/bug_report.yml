@@ -1,0 +1,36 @@
+name: Bug report
+description: Something is broken
+labels: [bug, needs-triage]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps that shows the problem. Say whether it is SFTP or S3, and which server or provider.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Output of `FERRY_LOG=ferry=debug ferry`. Remove host names and user names you don't want to share.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Ferry version
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "Distribution, Wayland or X11, GPU"

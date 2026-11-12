@@ -1,0 +1,13 @@
+name: Install Linux build dependencies
+description: System libraries GPUI needs to build on Ubuntu.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential pkg-config \
+          libasound2-dev libfontconfig-dev libfreetype-dev libssl-dev \
+          libvulkan1 libwayland-dev libx11-xcb-dev libxcb1-dev \
+          libxkbcommon-dev libxkbcommon-x11-dev libzstd-dev

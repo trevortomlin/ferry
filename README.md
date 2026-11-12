@@ -1,5 +1,9 @@
 # Ferry
 
+[![CI](https://github.com/trevortomlin/ferry/actions/workflows/ci.yml/badge.svg)](https://github.com/trevortomlin/ferry/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/trevortomlin/ferry)](https://github.com/trevortomlin/ferry/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A fast SFTP and Amazon S3 browser for Linux, built on
 [GPUI Fast](https://github.com/trevortomlin/gpui-fast). Ferry carries files
 back and forth between your machine and your servers.
@@ -69,25 +73,25 @@ any tuning.
 | | Before | After | Change |
 | --- | ---: | ---: | ---: |
 | **Real window** (`script/measure.py`) | | | |
-| Start → first frame | 138 ms | 138 ms | — |
+| Start → first frame | 138 ms | 138 ms | no change |
 | Idle CPU, nothing open | 0.2–0.4 % | 0–0.2 % | ≈ 0 (one clock tick) |
 | Threads, idle | 27 | 23 | −4 |
 | Resident memory, idle | 108.3 MB | 106.4 MB | −1.9 MB |
-| Heap and other anonymous memory, idle | 22.5 MB | 22.4 MB | — |
+| Heap and other anonymous memory, idle | 22.5 MB | 22.4 MB | no change |
 | Open a 100k-entry folder, end to end | 1,027 ms | 376 ms | **2.7× faster** |
 | Process CPU, start until the folder is loaded | 0.44 s | 0.33 s | −25 % |
 | Resident memory with the folder open | 121.9 MB | 118.1 MB | −3.8 MB |
 | Anonymous memory with the folder open | 34.2 MB | 29.8 MB | −4.4 MB (−38 % of what the listing costs) |
 | UI-thread CPU per frame, scrolling 100k entries | 1,302 µs | 1,064 µs | −18 % |
 | …95th percentile | 1,445 µs | 1,185 µs | −18 % |
-| Idle CPU with the folder open | 0–0.2 % | 0–0.2 % | — |
+| Idle CPU with the folder open | 0–0.2 % | 0–0.2 % | no change |
 | **Protocol** (`examples/sftp_bench.rs`) | | | |
 | List 100k entries | 1,050 ms | 354 ms | **3.0× faster** |
 | Download 256 MiB | 21 MB/s | 580 MB/s | **28× faster** |
 | CPU to download it | 754 ms | 690 ms | −8 % |
 | Upload 256 MiB | 166 MB/s | 481 MB/s | **2.9× faster** |
 | CPU to upload it | 684 ms | 557 ms | −19 % |
-| Peak memory through both transfers | 14.4 MB | 14.1 MB | — |
+| Peak memory through both transfers | 14.4 MB | 14.1 MB | no change |
 
 What changed:
 
@@ -191,6 +195,11 @@ FERRY_LIVE=host:port:user:/path/to/key:/remote/dir:/local/view/of/dir \
 
 `testing/` has Docker Compose files for an SFTP server and MinIO. Any local
 `sshd` started with its own config works too.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report security issues privately, as
+described in [SECURITY.md](SECURITY.md).
 
 ## License
 
