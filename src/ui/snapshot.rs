@@ -47,9 +47,10 @@ pub fn run() {
     tracing::debug!("snapshot: text system");
     let text = Arc::new(gpui_wgpu::CosmicTextSystem::new("Noto Sans"));
     tracing::debug!("snapshot: app");
-    let mut cx = HeadlessAppContext::with_platform(text, Arc::new(crate::ui::assets::Assets), || {
-        gpui_platform::current_headless_renderer()
-    });
+    let mut cx =
+        HeadlessAppContext::with_platform(text, Arc::new(crate::ui::assets::Assets), || {
+            gpui_platform::current_headless_renderer()
+        });
     cx.update(crate::bind_keys);
     tracing::debug!("snapshot: window");
     let window = cx
@@ -149,14 +150,17 @@ fn live() {
     );
     let out = PathBuf::from(std::env::args().nth(2).unwrap());
     // Keep known_hosts and Downloads inside the sandbox too.
-    let home = std::env::temp_dir().join(format!("ferry-snap-{}", std::process::id())).join("home");
+    let home = std::env::temp_dir()
+        .join(format!("ferry-snap-{}", std::process::id()))
+        .join("home");
     std::fs::create_dir_all(home.join("Downloads")).unwrap();
     unsafe { std::env::set_var("HOME", &home) };
 
     let text = Arc::new(gpui_wgpu::CosmicTextSystem::new("Noto Sans"));
-    let mut cx = HeadlessAppContext::with_platform(text, Arc::new(crate::ui::assets::Assets), || {
-        gpui_platform::current_headless_renderer()
-    });
+    let mut cx =
+        HeadlessAppContext::with_platform(text, Arc::new(crate::ui::assets::Assets), || {
+            gpui_platform::current_headless_renderer()
+        });
     cx.update(crate::bind_keys);
     let window = cx
         .open_window(size(px(1320.), px(820.)), |window, cx| {
@@ -164,7 +168,12 @@ fn live() {
         })
         .unwrap();
     let handle: gpui::AnyWindowHandle = window.into();
-    let with = |cx: &mut HeadlessAppContext, f: &mut dyn FnMut(&mut Workspace, &mut gpui::Window, &mut gpui::Context<Workspace>)| {
+    let with = |cx: &mut HeadlessAppContext,
+                f: &mut dyn FnMut(
+        &mut Workspace,
+        &mut gpui::Window,
+        &mut gpui::Context<Workspace>,
+    )| {
         cx.update_window(handle, |root, window, cx| {
             let view = root.downcast::<Workspace>().unwrap();
             view.update(cx, |this, cx| f(this, window, cx));
@@ -220,7 +229,11 @@ fn live() {
         s.phase == "ready" && s.names.iter().any(|n| n == "big.bin"),
         format!("{} {:?}", s.phase, s.names),
     );
-    eprintln!("     connected and listed {} entries in {:?}", s.names.len(), t.elapsed());
+    eprintln!(
+        "     connected and listed {} entries in {:?}",
+        s.names.len(),
+        t.elapsed()
+    );
 
     step(&mut cx, "mkdir", "made by test");
     let s = settle(&mut cx);
@@ -240,7 +253,8 @@ fn live() {
 
     step(&mut cx, "download", "big.bin");
     let s = settle(&mut cx);
-    let same = std::fs::read(home.join("Downloads/big.bin")).ok() == std::fs::read(local.join("big.bin")).ok();
+    let same = std::fs::read(home.join("Downloads/big.bin")).ok()
+        == std::fs::read(local.join("big.bin")).ok();
     check("download a file", same, s.toast.clone());
 
     step(&mut cx, "download", "docs");
@@ -257,7 +271,8 @@ fn live() {
     let s = settle(&mut cx);
     check(
         "upload",
-        std::fs::read(local.join("upload me.txt")).ok().as_deref() == Some(&b"uploaded by the live test"[..])
+        std::fs::read(local.join("upload me.txt")).ok().as_deref()
+            == Some(&b"uploaded by the live test"[..])
             && s.names.iter().any(|n| n == "upload me.txt"),
         format!("{} {:?}", s.toast, s.names.len()),
     );

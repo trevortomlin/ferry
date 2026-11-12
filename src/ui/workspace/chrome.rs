@@ -6,16 +6,15 @@ use ferry::model::connection::{Connection, ConnectionId, Protocol};
 use ferry::model::path;
 use ferry::model::transfer::{Direction, State, Transfer};
 use gpui::{
-    Focusable,
-    AnyElement, Context, ExternalPaths, FontWeight, Hsla, MouseButton, MouseDownEvent,
+    AnyElement, Context, ExternalPaths, Focusable, FontWeight, Hsla, MouseButton, MouseDownEvent,
     SharedString, Window, div, prelude::*, px,
 };
 
-use super::{Workspace, DraggedRows, Menu, Phase, ToastKind, UploadFiles, tilde};
-use crate::ui::theme;
-use crate::ui::widgets::{self as ui, button, icon_button, icon_el, icon_toggle, tooltip};
+use super::{DraggedRows, Menu, Phase, ToastKind, UploadFiles, Workspace, tilde};
 use crate::ui::format;
+use crate::ui::theme;
 use crate::ui::widgets::usage_bar;
+use crate::ui::widgets::{self as ui, button, icon_button, icon_el, icon_toggle, tooltip};
 
 const SIDEBAR_W: f32 = 248.;
 
@@ -95,10 +94,11 @@ impl Workspace {
                     .text_color(theme::muted())
                     .child("No bookmarks yet. Add an SFTP server or an S3 bucket to get started.")
                     .child(
-                        button("side-new", "New connection", Some("plus"), true)
-                            .on_click(cx.listener(|this, _, w, cx| {
+                        button("side-new", "New connection", Some("plus"), true).on_click(
+                            cx.listener(|this, _, w, cx| {
                                 this.edit_connection(None, Protocol::Sftp, w, cx)
-                            })),
+                            }),
+                        ),
                     ),
             );
         }
@@ -490,7 +490,9 @@ impl Workspace {
             .child(
                 icon_button("up", "arrow-up", can_up)
                     .tooltip(tooltip("Enclosing folder  ·  Backspace"))
-                    .when(can_up, |b| b.on_click(cx.listener(|this, _, _, cx| this.go_up(cx)))),
+                    .when(can_up, |b| {
+                        b.on_click(cx.listener(|this, _, _, cx| this.go_up(cx)))
+                    }),
             )
             .child(self.render_location(window, cx))
             .child(
@@ -514,9 +516,9 @@ impl Workspace {
                     })
                     .when(!ready, |d| d.opacity(0.5))
                     .cursor_text()
-                    .on_click(cx.listener(|this, _, w, cx| {
-                        this.focus_filter(&super::FocusFilter, w, cx)
-                    }))
+                    .on_click(
+                        cx.listener(|this, _, w, cx| this.focus_filter(&super::FocusFilter, w, cx)),
+                    )
                     .child(icon_el(
                         if filter_text.is_empty() {
                             "search"
@@ -558,9 +560,11 @@ impl Workspace {
                 icon_button("refresh", "refresh", ready)
                     .tooltip(tooltip("Refresh  ·  F5"))
                     .when(ready, |b| {
-                        b.on_click(cx.listener(|this, _, w, cx| {
-                            this.refresh_action(&super::Refresh, w, cx)
-                        }))
+                        b.on_click(
+                            cx.listener(|this, _, w, cx| {
+                                this.refresh_action(&super::Refresh, w, cx)
+                            }),
+                        )
                     }),
             )
             .child(
@@ -578,9 +582,9 @@ impl Workspace {
                     hidden,
                 )
                 .tooltip(tooltip("Hidden files  ·  Ctrl+H"))
-                .on_click(cx.listener(|this, _, w, cx| {
-                    this.toggle_hidden(&super::ToggleHidden, w, cx)
-                })),
+                .on_click(
+                    cx.listener(|this, _, w, cx| this.toggle_hidden(&super::ToggleHidden, w, cx)),
+                ),
             )
             .child(div().w(px(6.)))
             .child(
@@ -596,9 +600,9 @@ impl Workspace {
                     .when(!ready, |b| b.opacity(0.45))
                     .tooltip(tooltip("Upload files  ·  Ctrl+U  (or drop them here)"))
                     .when(ready, |b| {
-                        b.on_click(cx.listener(|this, _, w, cx| {
-                            this.upload_files(&UploadFiles, w, cx)
-                        }))
+                        b.on_click(
+                            cx.listener(|this, _, w, cx| this.upload_files(&UploadFiles, w, cx)),
+                        )
                         .on_mouse_down(
                             MouseButton::Right,
                             cx.listener(|this, e: &MouseDownEvent, _, cx| {
@@ -676,9 +680,9 @@ impl Workspace {
             .border_1()
             .border_color(theme::border())
             .cursor_text()
-            .on_click(cx.listener(|this, _, w, cx| {
-                this.edit_location(&super::EditLocation, w, cx)
-            }));
+            .on_click(
+                cx.listener(|this, _, w, cx| this.edit_location(&super::EditLocation, w, cx)),
+            );
         let protocol = tab.connection.protocol;
         bar = bar.child(self.crumb(
             "crumb-root".into(),
@@ -708,7 +712,9 @@ impl Workspace {
             ));
         }
         if tab.browser.loading && ready {
-            bar = bar.child(div().flex_1()).child(div().pr_2().child(ui::busy_dots_small("crumb-busy")));
+            bar = bar
+                .child(div().flex_1())
+                .child(div().pr_2().child(ui::busy_dots_small("crumb-busy")));
         }
         bar.into_any_element()
     }
@@ -831,11 +837,11 @@ impl Workspace {
                     format::bytes(done),
                     format::bytes(total)
                 ))
-                .child(
-                    div()
-                        .w(px(80.))
-                        .child(usage_bar(done as f32 / total.max(1) as f32, theme::accent(), 4.)),
-                );
+                .child(div().w(px(80.)).child(usage_bar(
+                    done as f32 / total.max(1) as f32,
+                    theme::accent(),
+                    4.,
+                )));
         }
         let failed = self.transfers.failed();
         if failed > 0 {
@@ -1156,7 +1162,8 @@ impl Workspace {
     // ── Welcome ─────────────────────────────────────────────────────────
 
     pub(super) fn render_welcome(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
-        let connections: Vec<Connection> = self.state.connections().iter().take(6).cloned().collect();
+        let connections: Vec<Connection> =
+            self.state.connections().iter().take(6).cloned().collect();
         let cards: Vec<AnyElement> = connections
             .into_iter()
             .enumerate()
@@ -1186,7 +1193,11 @@ impl Workspace {
                             .flex()
                             .items_center()
                             .justify_center()
-                            .child(icon_el(protocol_icon(c.protocol), theme::category(hue), 18.)),
+                            .child(icon_el(
+                                protocol_icon(c.protocol),
+                                theme::category(hue),
+                                18.,
+                            )),
                     )
                     .child(
                         div()
@@ -1275,16 +1286,22 @@ impl Workspace {
                     .flex()
                     .gap_2()
                     .child(
-                        button("welcome-sftp", "New SFTP connection", Some("server"), !has_cards)
-                            .on_click(cx.listener(|this, _, w, cx| {
-                                this.edit_connection(None, Protocol::Sftp, w, cx)
-                            })),
+                        button(
+                            "welcome-sftp",
+                            "New SFTP connection",
+                            Some("server"),
+                            !has_cards,
+                        )
+                        .on_click(cx.listener(|this, _, w, cx| {
+                            this.edit_connection(None, Protocol::Sftp, w, cx)
+                        })),
                     )
                     .child(
-                        button("welcome-s3", "New S3 connection", Some("cloud"), false)
-                            .on_click(cx.listener(|this, _, w, cx| {
+                        button("welcome-s3", "New S3 connection", Some("cloud"), false).on_click(
+                            cx.listener(|this, _, w, cx| {
                                 this.edit_connection(None, Protocol::S3, w, cx)
-                            })),
+                            }),
+                        ),
                     ),
             )
             .child(

@@ -36,7 +36,8 @@ impl Render for Panel {
         let kind = self.kind;
         // A cached view lays its content out as a new root: this is what
         // makes that content fill the panel rather than shrink to fit.
-        let content = self.workspace
+        let content = self
+            .workspace
             .update(cx, |ws, cx| -> AnyElement {
                 match kind {
                     PanelKind::Sidebar => ws.render_sidebar(cx).into_any_element(),
@@ -184,8 +185,14 @@ impl Workspace {
             }
             (self.settings.show_hidden, self.editing_location).hash(h);
             self.filter_input.read(cx).text().hash(h);
-            self.filter_input.focus_handle(cx).is_focused(window).hash(h);
-            self.location_input.focus_handle(cx).is_focused(window).hash(h);
+            self.filter_input
+                .focus_handle(cx)
+                .is_focused(window)
+                .hash(h);
+            self.location_input
+                .focus_handle(cx)
+                .is_focused(window)
+                .hash(h);
         });
         let status = hash(|h| {
             if let Some(t) = tab {
@@ -203,7 +210,12 @@ impl Workspace {
                 )
                     .hash(h);
             }
-            (self.transfers.overall(), self.transfers.active(), self.transfers.failed()).hash(h);
+            (
+                self.transfers.overall(),
+                self.transfers.active(),
+                self.transfers.failed(),
+            )
+                .hash(h);
         });
         let transfers = hash(|h| {
             for t in self.transfers.all() {

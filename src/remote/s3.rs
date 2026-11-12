@@ -24,12 +24,12 @@
 
 use std::path::Path;
 
+use crate::model::entries::{Entries, Entry, Kind};
+use crate::secrets::Credentials as Auth;
 use aws_sdk_s3::Client;
 use aws_sdk_s3::config::{BehaviorVersion, Credentials, Region};
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::types::{Delete, ObjectIdentifier};
-use crate::model::entries::{Entries, Entry, Kind};
-use crate::secrets::Credentials as Auth;
 use tokio::io::AsyncWriteExt;
 
 use crate::remote::{Chunks, Finished, Progress, VfsError};

@@ -101,7 +101,10 @@ impl TextInput {
     /// Byte offset in `content` → byte offset in what is drawn.
     fn to_display(&self, offset: usize) -> usize {
         if self.masked {
-            self.content[..offset.min(self.content.len())].chars().count() * BULLET.len_utf8()
+            self.content[..offset.min(self.content.len())]
+                .chars()
+                .count()
+                * BULLET.len_utf8()
         } else {
             offset
         }
@@ -671,7 +674,8 @@ impl Element for TextElement {
                 Some(fill(
                     Bounds::from_corners(
                         point(
-                            bounds.left() + line.x_for_index(input.to_display(selected_range.start)),
+                            bounds.left()
+                                + line.x_for_index(input.to_display(selected_range.start)),
                             bounds.top(),
                         ),
                         point(

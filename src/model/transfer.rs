@@ -399,7 +399,10 @@ fn free_name(remote: &str, local: &std::path::Path) -> (String, std::path::PathB
         let local_candidate = local.with_file_name(&candidate);
         if !local_candidate.exists() || counter > 999 {
             let parent = crate::model::path::parent(remote).unwrap_or("/");
-            return (crate::model::path::join(parent, &candidate), local_candidate);
+            return (
+                crate::model::path::join(parent, &candidate),
+                local_candidate,
+            );
         }
         counter += 1;
     }

@@ -183,8 +183,7 @@ impl Bookmarks {
     // ---- internals ----
 
     fn sort_connections(&mut self) {
-        self.connections
-            .sort_by_key(|c| c.name.to_lowercase());
+        self.connections.sort_by_key(|c| c.name.to_lowercase());
     }
 
     /// Ids must never be reused: they key the keychain entry, and handing a new

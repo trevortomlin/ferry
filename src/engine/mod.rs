@@ -20,8 +20,8 @@ use crate::model::connection::Connection;
 use crate::model::entries::Entries;
 use crate::model::message::{Event, Generation, SessionId};
 use crate::model::transfer::{Conflict, Direction, TransferId};
-use crate::secrets::Credentials;
 use crate::remote::{Chunks, Finished, Progress, Provider};
+use crate::secrets::Credentials;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 
 /// UI thread → engine. Lives here rather than in `core` because it carries
@@ -79,11 +79,21 @@ pub enum Command {
 
 #[derive(Debug)]
 pub enum Operation {
-    CreateDirectory { path: String },
-    Rename { from: String, to: String },
-    Delete { paths: Vec<(String, bool)> },
+    CreateDirectory {
+        path: String,
+    },
+    Rename {
+        from: String,
+        to: String,
+    },
+    Delete {
+        paths: Vec<(String, bool)>,
+    },
     /// Move each path into a directory, keeping its name.
-    Move { paths: Vec<String>, into: String },
+    Move {
+        paths: Vec<String>,
+        into: String,
+    },
 }
 
 /// What one session task is told to do.
@@ -473,10 +483,8 @@ async fn session_task(
                         let mut moved = 0usize;
                         let mut failure = None;
                         for from in paths {
-                            let to = crate::model::path::join(
-                                into,
-                                crate::model::path::file_name(from),
-                            );
+                            let to =
+                                crate::model::path::join(into, crate::model::path::file_name(from));
                             match provider.rename(from, &to).await {
                                 Ok(()) => moved += 1,
                                 Err(error) => {

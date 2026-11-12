@@ -273,7 +273,6 @@ fn by_extension(ext: &str) -> Option<(Category, &'static str)> {
     })
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

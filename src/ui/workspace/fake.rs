@@ -8,28 +8,50 @@ use ferry::model::order::Filter;
 use ferry::model::transfer::{Conflict, Direction, State};
 use gpui::{Context, Point, ScrollStrategy, Window, px};
 
-use super::{Workspace, Dialog, Menu, Phase, Tab};
+use super::{Dialog, Menu, Phase, Tab, Workspace};
 
 const NOW: i64 = 1_793_000_000;
 
 fn bookmarks(this: &mut Workspace) {
-    let make = |this: &mut Workspace, protocol, name: &str, host: &str, user: &str, bucket: &str| {
-        this.state.begin_new(protocol);
-        let d = this.state.editor.as_mut().unwrap();
-        d.connection.name = name.into();
-        d.connection.host = host.into();
-        d.connection.username = user.into();
-        d.connection.bucket = bucket.into();
-        if protocol == Protocol::Sftp {
-            d.connection.auth = Auth::Password;
-        }
-        this.state.commit_edit();
-    };
-    make(this, Protocol::Sftp, "Production web", "web-01.example.com", "deploy", "");
-    make(this, Protocol::Sftp, "Build box", "build.internal", "ci", "");
+    let make =
+        |this: &mut Workspace, protocol, name: &str, host: &str, user: &str, bucket: &str| {
+            this.state.begin_new(protocol);
+            let d = this.state.editor.as_mut().unwrap();
+            d.connection.name = name.into();
+            d.connection.host = host.into();
+            d.connection.username = user.into();
+            d.connection.bucket = bucket.into();
+            if protocol == Protocol::Sftp {
+                d.connection.auth = Auth::Password;
+            }
+            this.state.commit_edit();
+        };
+    make(
+        this,
+        Protocol::Sftp,
+        "Production web",
+        "web-01.example.com",
+        "deploy",
+        "",
+    );
+    make(
+        this,
+        Protocol::Sftp,
+        "Build box",
+        "build.internal",
+        "ci",
+        "",
+    );
     make(this, Protocol::S3, "Media bucket", "", "", "acme-media");
     make(this, Protocol::Sftp, "Raspberry Pi", "pi.local", "pi", "");
-    make(this, Protocol::S3, "Backups (MinIO)", "http://nas:9000", "", "backups");
+    make(
+        this,
+        Protocol::S3,
+        "Backups (MinIO)",
+        "http://nas:9000",
+        "",
+        "backups",
+    );
 }
 
 fn listing(big: usize) -> Entries {
@@ -112,8 +134,11 @@ fn ready_tab(this: &mut Workspace, conn_ix: usize, path: &str, big: usize, sessi
         entries: listing(big),
         last: true,
     };
-    tab.browser
-        .apply(&mut event, this.settings.sort, Filter::new("", this.settings.show_hidden));
+    tab.browser.apply(
+        &mut event,
+        this.settings.sort,
+        Filter::new("", this.settings.show_hidden),
+    );
     tab.browser.load_time = Some(std::time::Duration::from_micros(38_400));
     this.tabs.push(tab);
     this.tabs.len() - 1
@@ -153,8 +178,10 @@ fn transfers(this: &mut Workspace, conflict: bool) {
         "Downloads/error.log",
         0,
     );
-    this.transfers
-        .finish(c, State::Failed("Permission denied: /var/www/logs/error.log".into()));
+    this.transfers.finish(
+        c,
+        State::Failed("Permission denied: /var/www/logs/error.log".into()),
+    );
     if conflict {
         let d = add(
             this,
@@ -171,7 +198,13 @@ fn transfers(this: &mut Workspace, conflict: bool) {
                 source: 1_482_113,
             },
         );
-        let _ = add(this, Direction::Download, "/var/www/README.md", "Downloads/README.md", 7_310);
+        let _ = add(
+            this,
+            Direction::Download,
+            "/var/www/README.md",
+            "Downloads/README.md",
+            7_310,
+        );
         this.asking = Some(d);
     }
 }
@@ -333,16 +366,30 @@ impl Workspace {
             names: tab
                 .map(|t| {
                     let e = t.browser.entries();
-                    t.browser.order().iter().map(|i| e.name(i).to_owned()).collect()
+                    t.browser
+                        .order()
+                        .iter()
+                        .map(|i| e.name(i).to_owned())
+                        .collect()
                 })
                 .unwrap_or_default(),
             busy: self.transfers.active() > 0 || self.expanding > 0,
-            toast: self.toast.as_ref().map(|t| t.text.to_string()).unwrap_or_default(),
+            toast: self
+                .toast
+                .as_ref()
+                .map(|t| t.text.to_string())
+                .unwrap_or_default(),
         }
     }
 
     /// One step of the live script.
-    pub fn debug_live_do(&mut self, step: &str, arg: &str, window: &mut Window, cx: &mut Context<Self>) {
+    pub fn debug_live_do(
+        &mut self,
+        step: &str,
+        arg: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let select = |this: &mut Workspace, name: &str| {
             if let Some(tab) = this.tabs.get_mut(this.active)
                 && let Some(row) = tab.row_of(name)

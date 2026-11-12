@@ -10,8 +10,8 @@
 use std::path::Path;
 
 use ferry::model::connection::{Connection, ConnectionId, Protocol};
-use ferry::secrets::Credentials;
 use ferry::remote::{Collect, Finished, Ignore, Progress, Provider, VfsError};
+use ferry::secrets::Credentials;
 
 const HOST: &str = "127.0.0.1";
 const PORT: u16 = 2222;

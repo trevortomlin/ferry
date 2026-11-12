@@ -9,16 +9,27 @@ use gpui::{
     prelude::*, px,
 };
 
-use super::{Workspace, Phase, ToggleHidden};
+use super::{Phase, ToggleHidden, Workspace};
 use crate::ui::theme;
 use crate::ui::widgets::icon_el;
 
 pub enum Menu {
-    Row { position: Point<Pixels> },
-    Background { position: Point<Pixels> },
-    Bookmark { position: Point<Pixels>, id: ConnectionId },
-    OpenBookmark { position: Point<Pixels> },
-    Upload { position: Point<Pixels> },
+    Row {
+        position: Point<Pixels>,
+    },
+    Background {
+        position: Point<Pixels>,
+    },
+    Bookmark {
+        position: Point<Pixels>,
+        id: ConnectionId,
+    },
+    OpenBookmark {
+        position: Point<Pixels>,
+    },
+    Upload {
+        position: Point<Pixels>,
+    },
 }
 
 type Run = Rc<dyn Fn(&mut Workspace, &mut Window, &mut Context<Workspace>)>;
@@ -100,7 +111,11 @@ impl Workspace {
             let row = tab.browser.cursor;
             v.push(item(
                 if is_dir { "folder-open" } else { "external" },
-                if is_dir { "Open" } else { "Open with default app" },
+                if is_dir {
+                    "Open"
+                } else {
+                    "Open with default app"
+                },
                 "Enter",
                 move |this, _, cx| this.open_row(row, cx),
             ));
@@ -155,12 +170,18 @@ impl Workspace {
             item("upload", "Upload files…", "Ctrl+U", |this, _, cx| {
                 this.pick_uploads(false, cx)
             }),
-            item("folder-plus", "Upload folder…", "Ctrl+Shift+U", |this, _, cx| {
-                this.pick_uploads(true, cx)
-            }),
-            item("folder-plus", "New folder…", "Ctrl+Shift+N", |this, w, cx| {
-                this.ask_new_folder(w, cx)
-            }),
+            item(
+                "folder-plus",
+                "Upload folder…",
+                "Ctrl+Shift+U",
+                |this, _, cx| this.pick_uploads(true, cx),
+            ),
+            item(
+                "folder-plus",
+                "New folder…",
+                "Ctrl+Shift+N",
+                |this, w, cx| this.ask_new_folder(w, cx),
+            ),
             Entry::Sep,
             item("refresh", "Refresh", "F5", |this, w, cx| {
                 this.refresh_action(&super::Refresh, w, cx)
@@ -202,9 +223,12 @@ impl Workspace {
             this.duplicate_connection(id, w, cx)
         }));
         v.push(Entry::Sep);
-        v.push(danger(item("trash", "Delete bookmark…", "", move |this, w, cx| {
-            this.ask_remove_bookmark(id, w, cx)
-        })));
+        v.push(danger(item(
+            "trash",
+            "Delete bookmark…",
+            "",
+            move |this, w, cx| this.ask_remove_bookmark(id, w, cx),
+        )));
         v
     }
 
@@ -220,9 +244,12 @@ impl Workspace {
             ));
         }
         v.push(Entry::Sep);
-        v.push(item("plus", "New connection…", "Ctrl+N", |this, w, cx| {
-            this.edit_connection(None, Protocol::Sftp, w, cx)
-        }));
+        v.push(item(
+            "plus",
+            "New connection…",
+            "Ctrl+N",
+            |this, w, cx| this.edit_connection(None, Protocol::Sftp, w, cx),
+        ));
         v
     }
 
@@ -231,9 +258,12 @@ impl Workspace {
             item("file", "Upload files…", "Ctrl+U", |this, _, cx| {
                 this.pick_uploads(false, cx)
             }),
-            item("folder", "Upload a folder…", "Ctrl+Shift+U", |this, _, cx| {
-                this.pick_uploads(true, cx)
-            }),
+            item(
+                "folder",
+                "Upload a folder…",
+                "Ctrl+Shift+U",
+                |this, _, cx| this.pick_uploads(true, cx),
+            ),
         ]
     }
 

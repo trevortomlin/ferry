@@ -30,7 +30,9 @@ fn main() {
     c.host = parts[0].into();
     c.port = parts[1].parse().unwrap();
     c.username = parts[2].into();
-    c.auth = Auth::KeyFile { path: parts[3].into() };
+    c.auth = Auth::KeyFile {
+        path: parts[3].into(),
+    };
     let creds = Credentials::SshKeyFile {
         username: c.username.clone(),
         path: parts[3].into(),
@@ -58,7 +60,9 @@ fn main() {
         let tmp = std::env::temp_dir().join(format!("ferry-bench-{}", std::process::id()));
         let size = p.size_of(&file).await.unwrap();
         let (t, c0) = (Instant::now(), cpu());
-        p.download(&file, &tmp, 0, &mut Ignore).await.expect("download");
+        p.download(&file, &tmp, 0, &mut Ignore)
+            .await
+            .expect("download");
         let secs = t.elapsed().as_secs_f64();
         println!(
             "download  {:>7.0} MB      {:>7.1} ms  cpu {:>6.1} ms  {:>6.0} MB/s",
@@ -69,7 +73,9 @@ fn main() {
         );
         let remote = format!("{file}.uploaded");
         let (t, c0) = (Instant::now(), cpu());
-        p.upload(&tmp, &remote, 0, &mut Ignore).await.expect("upload");
+        p.upload(&tmp, &remote, 0, &mut Ignore)
+            .await
+            .expect("upload");
         let secs = t.elapsed().as_secs_f64();
         println!(
             "upload    {:>7.0} MB      {:>7.1} ms  cpu {:>6.1} ms  {:>6.0} MB/s",
@@ -86,7 +92,10 @@ fn main() {
         };
         // When the server is this machine, the file is right here to compare.
         if let Ok(original) = std::fs::read(&file) {
-            println!("download byte-identical: {}", std::fs::read(&tmp).unwrap() == original);
+            println!(
+                "download byte-identical: {}",
+                std::fs::read(&tmp).unwrap() == original
+            );
         }
         let _ = p.remove(&remote, false).await;
         let _ = std::fs::remove_file(&tmp);

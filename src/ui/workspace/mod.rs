@@ -9,10 +9,10 @@
 mod browser;
 mod chrome;
 mod dialogs;
-mod menu;
-mod panels;
 #[cfg(feature = "snapshot")]
 mod fake;
+mod menu;
+mod panels;
 
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
@@ -20,13 +20,13 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
+use ferry::model::bookmarks::Bookmarks;
 use ferry::model::browser::{Browser, Move};
 use ferry::model::connection::{Connection, ConnectionId, Protocol};
 use ferry::model::message::{Event, SessionId};
 use ferry::model::order::{Filter, SortKey};
 use ferry::model::path;
 use ferry::model::settings::{Settings, Theme};
-use ferry::model::bookmarks::Bookmarks;
 use ferry::model::transfer::{Direction, Queue, Resolution, State, TransferId};
 use ferry::secrets::Secret;
 use futures::StreamExt;
@@ -36,11 +36,11 @@ use gpui::{
     UniformListScrollHandle, Window, WindowAppearance, actions, div, prelude::*, px,
 };
 
-use ferry::secrets::keychain::Keychain;
-use ferry::engine::{Command, Engine, Operation};
 use crate::ui::text_input::{TextInput, TextInputEvent};
 use crate::ui::{format, theme};
 use ferry::engine::walk;
+use ferry::engine::{Command, Engine, Operation};
+use ferry::secrets::keychain::Keychain;
 
 pub use browser::*;
 pub use dialogs::Dialog;
@@ -88,7 +88,9 @@ const TRANSFER_LINGER: Duration = Duration::from_secs(60);
 pub enum Phase {
     /// Waiting on the keychain. `asked` once the request is in flight; the
     /// keychain answers one connection at a time.
-    Unlocking { asked: bool },
+    Unlocking {
+        asked: bool,
+    },
     /// The engine is connecting.
     Connecting,
     Ready,
@@ -504,9 +506,9 @@ impl Workspace {
                 } => {
                     let session = *session;
                     for item in items.drain(..) {
-                        let id = self
-                            .transfers
-                            .add(item.direction, item.remote, item.local, item.size);
+                        let id =
+                            self.transfers
+                                .add(item.direction, item.remote, item.local, item.size);
                         self.transfer_session.insert(id, session);
                     }
                     if *last {
@@ -662,10 +664,8 @@ impl Workspace {
                 let mut first = true;
                 for name in &wanted {
                     if let Some(row) = tab.row_of(name) {
-                        tab.browser.focus(
-                            row,
-                            if first { Move::Replace } else { Move::Toggle },
-                        );
+                        tab.browser
+                            .focus(row, if first { Move::Replace } else { Move::Toggle });
                         if first {
                             tab.scroll.scroll_to_item(row, ScrollStrategy::Center);
                         }
@@ -988,8 +988,7 @@ impl Workspace {
             return;
         }
         tab.filter = text;
-        tab.browser
-            .reorder(sort, Filter::new(&tab.filter, hidden));
+        tab.browser.reorder(sort, Filter::new(&tab.filter, hidden));
         tab.scroll.scroll_to_item(0, ScrollStrategy::Top);
         cx.notify();
     }
@@ -1063,7 +1062,12 @@ impl Workspace {
             tab.browser
                 .order()
                 .iter()
-                .map(|e| (path::join(&tab.browser.path, entries.name(e)), entries.size(e)))
+                .map(|e| {
+                    (
+                        path::join(&tab.browser.path, entries.name(e)),
+                        entries.size(e),
+                    )
+                })
                 .filter(|(p, _)| chosen.iter().any(|(c, _)| c == p))
                 .collect()
         };
@@ -1110,7 +1114,8 @@ impl Workspace {
             if let Ok(Ok(Some(mut paths))) = picked.await
                 && let Some(dir) = paths.pop()
             {
-                this.update(cx, |this, cx| this.download(Some(dir), cx)).ok();
+                this.update(cx, |this, cx| this.download(Some(dir), cx))
+                    .ok();
             }
         })
         .detach();
@@ -1209,7 +1214,8 @@ impl Workspace {
     /// Show the drawer when something is queued, unless the user closed it
     /// on purpose since the last time it was empty.
     fn reveal_transfers(&mut self, cx: &mut Context<Self>) {
-        if !self.settings.show_transfers && self.transfers.all().iter().all(|t| t.state.is_finished())
+        if !self.settings.show_transfers
+            && self.transfers.all().iter().all(|t| t.state.is_finished())
         {
             self.settings.show_transfers = true;
             self.save_settings(cx);
@@ -1542,7 +1548,9 @@ impl Workspace {
     }
 
     fn home_of_active(&self) -> String {
-        self.tab().map(|t| t.home.clone()).unwrap_or_else(|| "/".into())
+        self.tab()
+            .map(|t| t.home.clone())
+            .unwrap_or_else(|| "/".into())
     }
 
     fn input_cancel(&mut self, _: &InputCancel, window: &mut Window, cx: &mut Context<Self>) {
@@ -1654,10 +1662,9 @@ impl Workspace {
         let Some((left, last, samples)) = self.scroll_probe.as_mut() else {
             return;
         };
-        let ready = self
-            .tabs
-            .get(self.active)
-            .is_some_and(|t| t.phase == Phase::Ready && !t.browser.loading && t.browser.visible() > 0);
+        let ready = self.tabs.get(self.active).is_some_and(|t| {
+            t.phase == Phase::Ready && !t.browser.loading && t.browser.visible() > 0
+        });
         if !ready {
             return;
         }
@@ -1863,14 +1870,19 @@ impl Render for Workspace {
                     .flex()
                     .flex_col()
                     .when(!self.tabs.is_empty(), |d| {
-                        d.child(self.panels.tabs.clone().cached(panels::sized(None, Some(38.))))
-                            .child(
-                                self.panels
-                                    .toolbar
-                                    .clone()
-                                    .cached(panels::sized(None, Some(50.))),
-                            )
-                            .child(self.render_body(window, cx))
+                        d.child(
+                            self.panels
+                                .tabs
+                                .clone()
+                                .cached(panels::sized(None, Some(38.))),
+                        )
+                        .child(
+                            self.panels
+                                .toolbar
+                                .clone()
+                                .cached(panels::sized(None, Some(50.))),
+                        )
+                        .child(self.render_body(window, cx))
                     })
                     .when(self.tabs.is_empty(), |d| d.child(self.render_welcome(cx)))
                     .when(drawer > 0., |d| {
@@ -1895,7 +1907,6 @@ impl Render for Workspace {
             .children(self.render_dialog(window, cx))
     }
 }
-
 
 /// CPU time used by the calling thread, in seconds.
 fn thread_cpu() -> f64 {

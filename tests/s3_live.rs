@@ -8,8 +8,8 @@
 
 use ferry::model::connection::{Connection, ConnectionId, Protocol};
 use ferry::model::entries::Kind;
-use ferry::secrets::{Credentials, Secret};
 use ferry::remote::{Chunks, Collect, Entries, Finished, Ignore, Provider, VfsError};
+use ferry::secrets::{Credentials, Secret};
 
 const ENDPOINT: &str = "http://127.0.0.1:9000";
 const BUCKET: &str = "ferry-test";

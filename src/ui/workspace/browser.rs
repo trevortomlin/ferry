@@ -12,12 +12,12 @@ use ferry::model::order::SortKey;
 use ferry::model::path;
 use gpui::{
     AnyElement, App, Bounds, ClickEvent, Context, Element, ElementId, ExternalPaths, FontWeight,
-    GlobalElementId, Hsla, InspectorElementId, KeyDownEvent, LayoutId, MouseButton,
-    MouseDownEvent, Pixels, Render, ScrollStrategy, SharedString, Style, Window, actions, canvas,
-    div, point, prelude::*, px, relative, size, uniform_list,
+    GlobalElementId, Hsla, InspectorElementId, KeyDownEvent, LayoutId, MouseButton, MouseDownEvent,
+    Pixels, Render, ScrollStrategy, SharedString, Style, Window, actions, canvas, div, point,
+    prelude::*, px, relative, size, uniform_list,
 };
 
-use super::{Workspace, DraggedRows, Menu, Phase, Tab};
+use super::{DraggedRows, Menu, Phase, Tab, Workspace};
 use crate::ui::assets::icon;
 use crate::ui::filetype::{self, Category};
 use crate::ui::format::{self, DateFormatter};
@@ -156,10 +156,14 @@ impl Workspace {
         self.with_tab(cx, |t, page| t.browser.move_cursor(page, Move::Replace));
     }
     fn move_home(&mut self, _: &MoveHome, _: &mut Window, cx: &mut Context<Self>) {
-        self.with_tab(cx, |t, _| t.browser.move_cursor(isize::MIN / 2, Move::Replace));
+        self.with_tab(cx, |t, _| {
+            t.browser.move_cursor(isize::MIN / 2, Move::Replace)
+        });
     }
     fn move_end(&mut self, _: &MoveEnd, _: &mut Window, cx: &mut Context<Self>) {
-        self.with_tab(cx, |t, _| t.browser.move_cursor(isize::MAX / 2, Move::Replace));
+        self.with_tab(cx, |t, _| {
+            t.browser.move_cursor(isize::MAX / 2, Move::Replace)
+        });
     }
     fn extend_up(&mut self, _: &ExtendUp, _: &mut Window, cx: &mut Context<Self>) {
         self.with_tab(cx, |t, _| t.browser.move_cursor(-1, Move::Extend));
@@ -168,10 +172,14 @@ impl Workspace {
         self.with_tab(cx, |t, _| t.browser.move_cursor(1, Move::Extend));
     }
     fn extend_home(&mut self, _: &ExtendHome, _: &mut Window, cx: &mut Context<Self>) {
-        self.with_tab(cx, |t, _| t.browser.move_cursor(isize::MIN / 2, Move::Extend));
+        self.with_tab(cx, |t, _| {
+            t.browser.move_cursor(isize::MIN / 2, Move::Extend)
+        });
     }
     fn extend_end(&mut self, _: &ExtendEnd, _: &mut Window, cx: &mut Context<Self>) {
-        self.with_tab(cx, |t, _| t.browser.move_cursor(isize::MAX / 2, Move::Extend));
+        self.with_tab(cx, |t, _| {
+            t.browser.move_cursor(isize::MAX / 2, Move::Extend)
+        });
     }
     fn select_all(&mut self, _: &SelectAll, _: &mut Window, cx: &mut Context<Self>) {
         self.with_tab(cx, |t, _| t.browser.select_all());
@@ -344,9 +352,10 @@ impl Workspace {
             Col::Permissions,
         ];
         // S3 objects carry no permission bits.
-        if self.tab().is_some_and(|t| {
-            t.connection.protocol == ferry::model::connection::Protocol::S3
-        }) {
+        if self
+            .tab()
+            .is_some_and(|t| t.connection.protocol == ferry::model::connection::Protocol::S3)
+        {
             cols.retain(|c| *c != Col::Permissions);
         }
         let need = |cols: &Vec<Col>| -> Pixels {
@@ -358,7 +367,11 @@ impl Workspace {
         cols
     }
 
-    pub(super) fn render_body(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+    pub(super) fn render_body(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         let Some(tab) = self.tab() else {
             return div().into_any_element();
         };
@@ -478,7 +491,12 @@ impl Workspace {
             }))
     }
 
-    fn render_list(&self, focused: bool, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+    fn render_list(
+        &self,
+        focused: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         let Some(tab) = self.tab() else {
             return div().into_any_element();
         };
@@ -607,7 +625,9 @@ impl Workspace {
                     this.row_right_down(row, e, w, cx)
                 }),
             )
-            .on_click(cx.listener(move |this, e: &ClickEvent, w, cx| this.row_click(row, e, w, cx)));
+            .on_click(
+                cx.listener(move |this, e: &ClickEvent, w, cx| this.row_click(row, e, w, cx)),
+            );
 
         // Dragging rows moves them onto a folder. The paths are resolved at
         // drop time, so a 100k selection costs nothing per frame.
@@ -707,21 +727,31 @@ impl Workspace {
                         _ => "Password",
                     };
                     actions.push(
-                        ui::button("enter-secret", format!("Enter {}", prompt.to_lowercase()), Some("key"), false)
-                            .on_click(cx.listener(move |this, _, _, cx| {
-                                if let Some(ix) = this.tab_ix_by_id(tab_id) {
-                                    this.tabs[ix].phase = Phase::Unlocking { asked: false };
-                                }
-                                this.ask_secret(tab_id, prompt, cx)
-                            }))
-                            .into_any_element(),
+                        ui::button(
+                            "enter-secret",
+                            format!("Enter {}", prompt.to_lowercase()),
+                            Some("key"),
+                            false,
+                        )
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            if let Some(ix) = this.tab_ix_by_id(tab_id) {
+                                this.tabs[ix].phase = Phase::Unlocking { asked: false };
+                            }
+                            this.ask_secret(tab_id, prompt, cx)
+                        }))
+                        .into_any_element(),
                     );
                 }
                 let id = tab.connection.id;
                 actions.push(
                     ui::button("edit-conn", "Edit connection", Some("pencil"), false)
                         .on_click(cx.listener(move |this, _, w, cx| {
-                            this.edit_connection(Some(id), ferry::model::connection::Protocol::Sftp, w, cx)
+                            this.edit_connection(
+                                Some(id),
+                                ferry::model::connection::Protocol::Sftp,
+                                w,
+                                cx,
+                            )
                         }))
                         .into_any_element(),
                 );

@@ -11,12 +11,12 @@ use std::sync::atomic::{AtomicU8, Ordering};
 
 use crate::model::entries::{Entries, Entry, Kind};
 use crate::secrets::Credentials;
+use futures::StreamExt as _;
+use futures::stream::FuturesOrdered;
 use russh::client;
 use russh::keys::{HashAlg, PrivateKeyWithHashAlg, known_hosts};
 use russh_sftp::client::RawSftpSession;
 use russh_sftp::protocol::{FileAttributes, OpenFlags, StatusCode};
-use futures::StreamExt as _;
-use futures::stream::FuturesOrdered;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::remote::{Chunks, Finished, Progress, VfsError};
@@ -308,7 +308,11 @@ impl Sftp {
             while data.len() < len {
                 match self
                     .sftp
-                    .read(handle.to_owned(), offset + data.len() as u64, (len - data.len()) as u32)
+                    .read(
+                        handle.to_owned(),
+                        offset + data.len() as u64,
+                        (len - data.len()) as u32,
+                    )
                     .await
                 {
                     Ok(more) if !more.data.is_empty() => data.extend_from_slice(&more.data),

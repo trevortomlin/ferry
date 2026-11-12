@@ -12,12 +12,12 @@ use gpui::{
 };
 
 use super::{
-    Workspace, DialogCancel, DialogConfirm, DialogNext, DialogPrev, Phase, ToastKind, tilde,
+    DialogCancel, DialogConfirm, DialogNext, DialogPrev, Phase, ToastKind, Workspace, tilde,
 };
+use crate::ui::format;
 use crate::ui::text_input::{TextInput, TextInputEvent};
 use crate::ui::theme;
 use crate::ui::widgets::{button, icon_el, segment, segmented, switch};
-use crate::ui::format;
 
 pub enum NameKind {
     NewFolder,
@@ -90,7 +90,12 @@ fn input(cx: &mut Context<Workspace>, placeholder: &str, text: &str) -> Entity<T
 }
 
 impl Workspace {
-    pub(super) fn open_dialog(&mut self, dialog: Dialog, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn open_dialog(
+        &mut self,
+        dialog: Dialog,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.menu = None;
         self.dialog = Some(dialog);
         if self.dialog.as_ref().is_some_and(Dialog::wants_dialog_focus) {
@@ -465,7 +470,9 @@ impl Workspace {
         if c.protocol == Protocol::Sftp {
             match port.parse::<u16>() {
                 Ok(p) if p > 0 => c.port = p,
-                _ => editor.problems.push("Port must be a number from 1 to 65535".into()),
+                _ => editor
+                    .problems
+                    .push("Port must be a number from 1 to 65535".into()),
             }
         }
         editor
@@ -493,11 +500,19 @@ impl Workspace {
         }
         self.creds.save(&connection, &typed);
         // Open tabs keep their session but show the new name.
-        for tab in self.tabs.iter_mut().filter(|t| t.connection.id == connection.id) {
+        for tab in self
+            .tabs
+            .iter_mut()
+            .filter(|t| t.connection.id == connection.id)
+        {
             tab.connection = connection.clone();
         }
         self.dialog = None;
-        self.show_toast(format!("Saved “{}”", connection.name), ToastKind::Success, cx);
+        self.show_toast(
+            format!("Saved “{}”", connection.name),
+            ToastKind::Success,
+            cx,
+        );
         if connect {
             self.open_connection(connection.id, window, cx);
         } else {
@@ -521,7 +536,9 @@ impl Workspace {
             let port = protocol.default_port().to_string();
             let region = draft.connection.region.clone();
             editor.port.update(cx, |i, cx| i.set_text(port, None, cx));
-            editor.region.update(cx, |i, cx| i.set_text(region, None, cx));
+            editor
+                .region
+                .update(cx, |i, cx| i.set_text(region, None, cx));
             editor.host.update(cx, |i, cx| i.set_text("", None, cx));
         }
         cx.notify();
@@ -723,8 +740,12 @@ impl Workspace {
                     .bg(theme::overlay())
                     .on_action(cx.listener(Self::dialog_confirm))
                     .on_action(cx.listener(Self::dialog_cancel))
-                    .on_action(cx.listener(|this, _: &DialogNext, w, cx| this.dialog_step(true, w, cx)))
-                    .on_action(cx.listener(|this, _: &DialogPrev, w, cx| this.dialog_step(false, w, cx)))
+                    .on_action(
+                        cx.listener(|this, _: &DialogNext, w, cx| this.dialog_step(true, w, cx)),
+                    )
+                    .on_action(
+                        cx.listener(|this, _: &DialogPrev, w, cx| this.dialog_step(false, w, cx)),
+                    )
                     .on_click(cx.listener(|this, _, w, cx| {
                         // A click outside closes only the dialogs that hold
                         // nothing typed.
@@ -760,18 +781,23 @@ impl Workspace {
                 segmented()
                     .child(
                         segment("p-sftp", "SFTP", Some("server"), protocol == Protocol::Sftp)
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.set_protocol(Protocol::Sftp, cx)
-                            })),
+                            .on_click(
+                                cx.listener(|this, _, _, cx| this.set_protocol(Protocol::Sftp, cx)),
+                            ),
                     )
                     .child(
                         segment("p-s3", "Amazon S3", Some("cloud"), protocol == Protocol::S3)
-                            .on_click(cx.listener(|this, _, _, cx| this.set_protocol(Protocol::S3, cx))),
+                            .on_click(
+                                cx.listener(|this, _, _, cx| this.set_protocol(Protocol::S3, cx)),
+                            ),
                     ),
             );
         }
 
-        form = form.child(labeled("Name", field_box("", editor.name.clone(), focused(&editor.name), false)));
+        form = form.child(labeled(
+            "Name",
+            field_box("", editor.name.clone(), focused(&editor.name), false),
+        ));
 
         match protocol {
             Protocol::Sftp => {
@@ -779,12 +805,10 @@ impl Workspace {
                     div()
                         .flex()
                         .gap_2()
-                        .child(
-                            div().flex_1().child(labeled(
-                                "Server",
-                                field_box("", editor.host.clone(), focused(&editor.host), false),
-                            )),
-                        )
+                        .child(div().flex_1().child(labeled(
+                            "Server",
+                            field_box("", editor.host.clone(), focused(&editor.host), false),
+                        )))
                         .child(div().w(px(90.)).child(labeled(
                             "Port",
                             field_box("", editor.port.clone(), focused(&editor.port), false),
@@ -792,7 +816,12 @@ impl Workspace {
                 );
                 form = form.child(labeled(
                     "Username",
-                    field_box("", editor.username.clone(), focused(&editor.username), false),
+                    field_box(
+                        "",
+                        editor.username.clone(),
+                        focused(&editor.username),
+                        false,
+                    ),
                 ));
             }
             Protocol::S3 => {
@@ -846,12 +875,18 @@ impl Workspace {
         match &c.auth {
             Auth::Agent => {
                 let (text, color): (String, Hsla) = match self.creds.agent_keys() {
-                    Ok([]) => ("The SSH agent is running but holds no keys. Add one with ssh-add.".into(), theme::warning()),
+                    Ok([]) => (
+                        "The SSH agent is running but holds no keys. Add one with ssh-add.".into(),
+                        theme::warning(),
+                    ),
                     Ok(keys) => (
                         format!(
                             "{} in the agent: {}",
                             format::plural(keys.len() as u64, "key", "keys"),
-                            keys.iter().map(|k| k.describe()).collect::<Vec<_>>().join(", ")
+                            keys.iter()
+                                .map(|k| k.describe())
+                                .collect::<Vec<_>>()
+                                .join(", ")
                         ),
                         theme::muted(),
                     ),
@@ -871,7 +906,12 @@ impl Workspace {
             Auth::KeyFile { .. } => {
                 form = form.child(labeled(
                     "Private key file",
-                    field_box("", editor.key_path.clone(), focused(&editor.key_path), false),
+                    field_box(
+                        "",
+                        editor.key_path.clone(),
+                        focused(&editor.key_path),
+                        false,
+                    ),
                 ));
             }
             Auth::AwsProfile { .. } => {
@@ -883,7 +923,12 @@ impl Workspace {
             Auth::AwsKeys { .. } => {
                 form = form.child(labeled(
                     "Access key ID",
-                    field_box("", editor.access_key.clone(), focused(&editor.access_key), false),
+                    field_box(
+                        "",
+                        editor.access_key.clone(),
+                        focused(&editor.access_key),
+                        false,
+                    ),
                 ));
             }
             Auth::Password => {}
@@ -910,7 +955,12 @@ impl Workspace {
         }
         form = form.child(labeled(
             "Start in (optional)",
-            field_box("", editor.initial_path.clone(), focused(&editor.initial_path), false),
+            field_box(
+                "",
+                editor.initial_path.clone(),
+                focused(&editor.initial_path),
+                false,
+            ),
         ));
 
         if !editor.problems.is_empty() {
@@ -934,7 +984,11 @@ impl Workspace {
             "New connection".into()
         };
         self.dialog_card(
-            if protocol == Protocol::S3 { "cloud" } else { "server" },
+            if protocol == Protocol::S3 {
+                "cloud"
+            } else {
+                "server"
+            },
             theme::accent(),
             title,
             Some(
@@ -982,7 +1036,12 @@ impl Workspace {
             div()
                 .flex()
                 .gap_3()
-                .child(div().w(px(150.)).text_color(theme::faint()).child(label.to_owned()))
+                .child(
+                    div()
+                        .w(px(150.))
+                        .text_color(theme::faint())
+                        .child(label.to_owned()),
+                )
                 .child(div().text_color(theme::text_soft()).child(value))
         };
         facts = facts.child(fact("Coming in", format::bytes(conflict.source)));
@@ -1001,62 +1060,62 @@ impl Workspace {
         }
         let can_resume = conflict.can_resume();
         let all = self.conflict_all;
-        let content = div()
-            .flex()
-            .flex_col()
-            .gap_3()
-            .child(facts)
-            .when(can_resume, |d| {
-                d.child(
-                    div()
-                        .text_xs()
-                        .text_color(theme::faint())
-                        .child("Continuing assumes the file hasn't changed since it was interrupted."),
-                )
-            })
-            .when(others > 0, |d| {
-                d.child(
-                    div()
-                        .id("conflict-all")
-                        .flex()
-                        .items_center()
-                        .gap_2()
-                        .cursor_pointer()
-                        .text_sm()
-                        .text_color(theme::text_soft())
-                        .on_click(cx.listener(|this, _, _, cx| {
-                            this.conflict_all = !this.conflict_all;
-                            cx.notify();
-                        }))
-                        .child(switch("conflict-all-switch", all))
-                        .child(format!("Do the same for the rest of this batch ({others} more)")),
-                )
-            })
-            .into_any_element();
+        let content =
+            div()
+                .flex()
+                .flex_col()
+                .gap_3()
+                .child(facts)
+                .when(can_resume, |d| {
+                    d.child(div().text_xs().text_color(theme::faint()).child(
+                        "Continuing assumes the file hasn't changed since it was interrupted.",
+                    ))
+                })
+                .when(others > 0, |d| {
+                    d.child(
+                        div()
+                            .id("conflict-all")
+                            .flex()
+                            .items_center()
+                            .gap_2()
+                            .cursor_pointer()
+                            .text_sm()
+                            .text_color(theme::text_soft())
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.conflict_all = !this.conflict_all;
+                                cx.notify();
+                            }))
+                            .child(switch("conflict-all-switch", all))
+                            .child(format!(
+                                "Do the same for the rest of this batch ({others} more)"
+                            )),
+                    )
+                })
+                .into_any_element();
         let mut buttons = vec![
             button("c-skip", "Skip", None, false)
                 .on_click(cx.listener(|this, _, _, cx| this.resolve_conflict(Resolution::Skip, cx)))
                 .into_any_element(),
             button("c-both", "Keep both", None, false)
-                .on_click(cx.listener(|this, _, _, cx| {
-                    this.resolve_conflict(Resolution::KeepBoth, cx)
-                }))
+                .on_click(
+                    cx.listener(|this, _, _, cx| this.resolve_conflict(Resolution::KeepBoth, cx)),
+                )
                 .into_any_element(),
         ];
         if can_resume {
             buttons.push(
                 button("c-resume", "Continue", Some("arrow-right"), false)
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.resolve_conflict(Resolution::Resume, cx)
-                    }))
+                    .on_click(
+                        cx.listener(|this, _, _, cx| this.resolve_conflict(Resolution::Resume, cx)),
+                    )
                     .into_any_element(),
             );
         }
         buttons.push(
             button("c-replace", "Replace", None, true)
-                .on_click(cx.listener(|this, _, _, cx| {
-                    this.resolve_conflict(Resolution::Overwrite, cx)
-                }))
+                .on_click(
+                    cx.listener(|this, _, _, cx| this.resolve_conflict(Resolution::Overwrite, cx)),
+                )
                 .into_any_element(),
         );
         Some(self.dialog_card(
@@ -1099,7 +1158,10 @@ impl Workspace {
         };
         let theme_seg = {
             let mut seg = segmented().w(px(240.));
-            for (i, t) in [Theme::System, Theme::Light, Theme::Dark].into_iter().enumerate() {
+            for (i, t) in [Theme::System, Theme::Light, Theme::Dark]
+                .into_iter()
+                .enumerate()
+            {
                 let label = match t {
                     Theme::System => "System",
                     Theme::Light => "Light",
@@ -1174,8 +1236,16 @@ impl Workspace {
         let content = div()
             .flex()
             .flex_col()
-            .child(row("Appearance", "Follow the system, or pick one.", theme_seg))
-            .child(row("Downloads", "Where Download puts things. Download to… asks.", downloads))
+            .child(row(
+                "Appearance",
+                "Follow the system, or pick one.",
+                theme_seg,
+            ))
+            .child(row(
+                "Downloads",
+                "Where Download puts things. Download to… asks.",
+                downloads,
+            ))
             .child(row(
                 "Show hidden files",
                 "Names that start with a dot.",
@@ -1388,7 +1458,11 @@ impl Editor {
 }
 
 /// Why a name can't be used, if it can't.
-fn name_problem(name: &str, original: Option<&str>, taken: impl Fn(&str) -> bool) -> Option<String> {
+fn name_problem(
+    name: &str,
+    original: Option<&str>,
+    taken: impl Fn(&str) -> bool,
+) -> Option<String> {
     if name.is_empty() {
         return Some("A name is required".into());
     }

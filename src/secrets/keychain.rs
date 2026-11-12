@@ -7,8 +7,8 @@
 
 use std::sync::mpsc::Receiver;
 
-use crate::model::connection::{Connection, ConnectionId};
 use crate::model::bookmarks::Bookmarks;
+use crate::model::connection::{Connection, ConnectionId};
 use crate::secrets::Secret;
 use crate::secrets::agent::{self, AgentError, AgentKey};
 use crate::secrets::vault::{Reply, SecretRef, Vault};

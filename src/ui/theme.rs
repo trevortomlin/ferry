@@ -107,7 +107,12 @@ pub fn brand() -> Hsla {
 }
 
 pub fn match_bg() -> Hsla {
-    hsla(42.0 / 360.0, 0.95, 0.62, if is_dark() { 0.30 } else { 0.45 })
+    hsla(
+        42.0 / 360.0,
+        0.95,
+        0.62,
+        if is_dark() { 0.30 } else { 0.45 },
+    )
 }
 
 pub fn overlay() -> Hsla {
@@ -125,10 +130,5 @@ pub fn category(hue: f32) -> Hsla {
 
 /// Soft background behind a big icon.
 pub fn category_soft(hue: f32) -> Hsla {
-    hsla(
-        hue / 360.0,
-        0.55,
-        0.62,
-        if is_dark() { 0.13 } else { 0.16 },
-    )
+    hsla(hue / 360.0, 0.55, 0.62, if is_dark() { 0.13 } else { 0.16 })
 }

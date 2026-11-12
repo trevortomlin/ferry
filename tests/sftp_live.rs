@@ -8,8 +8,8 @@
 
 use ferry::model::connection::{Connection, ConnectionId, Protocol};
 use ferry::model::entries::{Entries, Kind};
-use ferry::secrets::{Credentials, Secret};
 use ferry::remote::{Chunks, Collect, Provider, VfsError};
+use ferry::secrets::{Credentials, Secret};
 
 const HOST: &str = "127.0.0.1";
 const PORT: u16 = 2222;
@@ -123,7 +123,10 @@ fn a_wrong_password_is_reported_as_an_auth_failure() {
         match Provider::connect(&connection(), credentials).await {
             Err(VfsError::Auth(message)) => {
                 eprintln!("auth error: {message}");
-                assert!(message.contains("ferry"), "the message should name the user");
+                assert!(
+                    message.contains("ferry"),
+                    "the message should name the user"
+                );
             }
             Err(other) => panic!("expected an auth failure, got {other}"),
             Ok(_) => panic!("a wrong password should not authenticate"),

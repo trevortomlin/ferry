@@ -404,23 +404,27 @@ pub fn busy_dots_small(id: &'static str) -> impl IntoElement {
 
 fn dots(id: &'static str, size_px: f32, gap: f32) -> impl IntoElement {
     use gpui::{Animation, AnimationExt};
-    div().flex().items_center().gap(px(gap)).children((0..3usize).map(move |i| {
-        div()
-            .size(px(size_px))
-            .rounded_full()
-            .bg(theme::accent())
-            .with_animation(
-                (id, i),
-                Animation::new(std::time::Duration::from_millis(1100))
-                    .repeat_synced()
-                    .with_max_fps(30.),
-                move |d, t| {
-                    let phase = (t - i as f32 * 0.18).rem_euclid(1.0);
-                    let lift = 1.0 - (phase * 2.0 - 1.0).abs();
-                    d.opacity(0.25 + 0.75 * lift)
-                },
-            )
-    }))
+    div()
+        .flex()
+        .items_center()
+        .gap(px(gap))
+        .children((0..3usize).map(move |i| {
+            div()
+                .size(px(size_px))
+                .rounded_full()
+                .bg(theme::accent())
+                .with_animation(
+                    (id, i),
+                    Animation::new(std::time::Duration::from_millis(1100))
+                        .repeat_synced()
+                        .with_max_fps(30.),
+                    move |d, t| {
+                        let phase = (t - i as f32 * 0.18).rem_euclid(1.0);
+                        let lift = 1.0 - (phase * 2.0 - 1.0).abs();
+                        d.opacity(0.25 + 0.75 * lift)
+                    },
+                )
+        }))
 }
 
 /// One option of a segmented control.
@@ -493,7 +497,11 @@ pub fn switch(id: impl Into<ElementId>, on: bool) -> Stateful<gpui::Div> {
             div()
                 .size(px(16.))
                 .rounded_full()
-                .bg(if on { theme::on_accent() } else { theme::panel() })
+                .bg(if on {
+                    theme::on_accent()
+                } else {
+                    theme::panel()
+                })
                 .shadow_sm(),
         )
 }
