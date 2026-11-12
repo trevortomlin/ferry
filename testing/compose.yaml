@@ -1,0 +1,61 @@
+# Local servers for development and integration tests.
+#
+# Nothing here is exposed beyond localhost and every credential is a throwaway.
+# `./up.sh` starts these and generates an SSH keypair for agent-auth testing.
+
+services:
+  sftp:
+    image: atmoz/sftp:alpine
+    container_name: ferry-sftp
+    ports:
+      - "127.0.0.1:2222:22"
+    volumes:
+      - ./data/sftp:/home/ferry/upload
+      - ./keys/id_ed25519.pub:/home/ferry/.ssh/keys/id_ed25519.pub:ro
+      - ./sftp.d:/etc/sftp.d:ro
+      # Persistent host keys. Without these the container gets a new identity
+      # every time it is recreated, which correctly trips the client's
+      # known_hosts check and looks exactly like a man-in-the-middle.
+      - ./keys/host/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key:ro
+      - ./keys/host/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key:ro
+    # user:password:uid:gid:subdirectory
+    #
+    # The uid matches the host user so the bind-mounted upload directory is
+    # writable from inside the container. With a mismatched uid the server can
+    # list the seeded files but cannot create anything.
+    command: ferry:ferry:1000:1000:upload
+
+  minio:
+    image: minio/minio:latest
+    container_name: ferry-minio
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: ferryadmin
+      MINIO_ROOT_PASSWORD: ferryadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  # Creates the test bucket once MinIO is up, then exits.
+  minio-init:
+    image: minio/mc:latest
+    container_name: ferry-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      mc alias set local http://minio:9000 ferryadmin ferryadmin &&
+      mc mb --ignore-existing local/ferry-test &&
+      echo 'bucket ferry-test ready'
+      "
+
+volumes:
+  minio-data:

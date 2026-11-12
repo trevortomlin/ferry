@@ -1,0 +1,70 @@
+[package]
+name = "ferry"
+description = "A fast, beautiful SFTP and S3 browser on GPUI Fast"
+version = "0.3.0"
+edition = "2024"
+rust-version = "1.92"
+license = "MIT"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "ferry"
+path = "src/main.rs"
+
+[dependencies]
+# gpui-fast, pinned to the same commit as Files. Bump `rev` deliberately.
+gpui = { git = "https://github.com/trevortomlin/gpui-fast", rev = "2c472d8e55426ad988a6d0d6f0c2f677a6c2dc53" }
+gpui_platform = { git = "https://github.com/trevortomlin/gpui-fast", rev = "2c472d8e55426ad988a6d0d6f0c2f677a6c2dc53", features = ["wayland", "x11"] }
+
+# Protocols.
+russh = "0.62.4"
+russh-sftp = "2.3.0"
+aws-config = { version = "1.8.18", default-features = false, features = ["rt-tokio", "rustls"] }
+aws-credential-types = "1.2.14"
+aws-sdk-s3 = { version = "1.137.0", default-features = false, features = ["rt-tokio", "rustls"] }
+aws-smithy-runtime-api = "1.12.3"
+tokio = { version = "1.53.1", features = ["rt", "rt-multi-thread", "net", "io-util", "sync", "time", "macros", "fs"] }
+
+# Storage and secrets.
+serde = { version = "1", features = ["derive"] }
+toml = { version = "0.9", default-features = false, features = ["std", "parse", "display", "serde"] }
+keyring = { version = "4", default-features = false, features = ["v1"] }
+
+futures = "0.3"
+anyhow = "1"
+libc = "0.2"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "ansi", "env-filter", "std"] }
+unicode-segmentation = "1.13"
+
+# Only for `--features snapshot`: offscreen rendering of the UI to PNG files.
+gpui_wgpu = { git = "https://github.com/trevortomlin/gpui-fast", rev = "2c472d8e55426ad988a6d0d6f0c2f677a6c2dc53", package = "gpui_wgpu", optional = true }
+
+# One keychain backend per platform, chosen at build time.
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "4", default-features = false, features = ["v1", "apple-native-keyring-store"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "4", default-features = false, features = ["v1", "zbus-secret-service-keyring-store"] }
+
+[features]
+snapshot = ["gpui/test-support", "gpui_platform/test-support", "dep:gpui_wgpu"]
+
+# GPUI is far too slow unoptimized; optimize dependencies even in dev builds.
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = false
+strip = "debuginfo"
+
+# Release plus symbols, for `perf record`.
+[profile.profiling]
+inherits = "release"
+debug = "line-tables-only"
+strip = "none"
