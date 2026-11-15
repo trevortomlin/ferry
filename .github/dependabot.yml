@@ -21,3 +21,7 @@ updates:
     commit-message:
       prefix: "ci"
     labels: [ci, dependencies]
+    ignore:
+      # The msrv job pins this to rust-version on purpose; bumping it hides
+      # MSRV breakage instead of testing for it.
+      - dependency-name: dtolnay/rust-toolchain
