@@ -20,7 +20,7 @@ gpui_platform = { git = "https://github.com/trevortomlin/gpui-fast", rev = "2c47
 
 # Protocols.
 russh = "0.62.4"
-russh-sftp = "2.3.0"
+russh-sftp = "3.0.1"
 aws-config = { version = "1.8.18", default-features = false, features = ["rt-tokio", "rustls"] }
 aws-credential-types = "1.2.14"
 aws-sdk-s3 = { version = "1.137.0", default-features = false, features = ["rt-tokio", "rustls"] }
