@@ -29,7 +29,7 @@ tokio = { version = "1.53.1", features = ["rt", "rt-multi-thread", "net", "io-ut
 
 # Storage and secrets.
 serde = { version = "1", features = ["derive"] }
-toml = { version = "0.9", default-features = false, features = ["std", "parse", "display", "serde"] }
+toml = { version = "1.2", default-features = false, features = ["std", "parse", "display", "serde"] }
 keyring = { version = "4", default-features = false, features = ["v1"] }
 
 futures = "0.3"
