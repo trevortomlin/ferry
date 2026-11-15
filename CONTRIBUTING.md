@@ -12,7 +12,7 @@ Thanks for taking the time to help.
 
 ## Development setup
 
-You need Rust 1.92 or newer and the system libraries GPUI uses on Linux. On
+You need Rust 1.98.1 or newer and the system libraries GPUI uses on Linux. On
 Debian or Ubuntu:
 
     sudo apt-get install build-essential pkg-config libasound2-dev \
